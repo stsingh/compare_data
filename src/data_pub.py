@@ -25,26 +25,26 @@ class DataCompare:
         self.odom = pd.read_csv(f'{os.path.dirname(os.path.realpath(__file__))}/odometry/0001_odom_data.txt', header=None, names=odom_cols)
 
     def cmd_pub(self, event=None):
-        rate = rospy.Rate(45) # Same as paper
-        cmd = Twist()
-        cmd.linear.x, cmd.linear.y, cmd.linear.z, cmd.angular.x, cmd.angular.y, cmd.angular.z, _ = self.cmds.iloc[self.cmd_row,:]
-        self.pub_cmds.publish(cmd)
-        rate.sleep()
-        self.cmd_row += 1
+        if self.cmd_row < len(self.cmds):
+            cmd = Twist()
+            cmd.linear.x, cmd.linear.y, cmd.linear.z, cmd.angular.x, cmd.angular.y, cmd.angular.z, _ = self.cmds.iloc[self.cmd_row,:]
+            self.pub_cmds.publish(cmd)
+            self.cmd_row += 1
 
     def read_state_data(self, msg):
         self.state_data = msg
 
     def err_pub(self, event=None):
-        pos = np.array(self.state_data.position)
-        vel = np.array(self.state_data.velocity)
-        _, odom_vl, odom_mtl, odom_vr, odom_mtr, _ = self.odom.iloc[self.odom_row,:]
-        self.odom_row += 1
+        if self.odom_row < len(self.odom):
+            pos = np.array(self.state_data.position)
+            vel = np.array(self.state_data.velocity)
+            _, odom_vl, odom_mtl, odom_vr, odom_mtr, _ = self.odom.iloc[self.odom_row,:]
+            self.odom_row += 1
 
-        lp = ((pos[0] + pos[2]) / 2) / 0.098
-        rp = ((pos[1] + pos[3]) / 2) / 0.098
-        lv = ((vel[0] + vel[2]) / 2) / 0.098
-        rv = ((vel[1] + vel[3]) / 2) / 0.098
+        lp = ((pos[0] + pos[2]) / 2)
+        rp = ((pos[1] + pos[3]) / 2)
+        lv = ((vel[0] + vel[2]) / 2)
+        rv = ((vel[1] + vel[3]) / 2)
 
         err = math.sqrt(((lp - odom_mtl)**2 + (rp - odom_mtr)**2 + (lv - odom_vl)**2 + (rv - odom_vr)**2)/4)
         self.pub_error.publish(Float64(err))
