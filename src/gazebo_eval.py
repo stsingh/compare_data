@@ -10,11 +10,13 @@ import math
 
 class DataCompare:
     def __init__(self):
+        # Which run are you using for evaluation?
+        run = 1
         # Vars for publishing data to cmd_vel
         self.pub_cmds = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.cmd_row = 0
         cmd_cols = ["lv_x", "lv_y", "lv_z", "av_x", "av_y", "av_z", "time"]
-        self.cmds = pd.read_csv(f'{os.path.dirname(os.path.realpath(__file__))}/cmd_vel/0001_cmd_vel.txt', header=None, names=cmd_cols)
+        self.cmds = pd.read_csv(f'{os.path.dirname(os.path.realpath(__file__))}/cmd_vel/000{run}_cmd_vel.txt', header=None, names=cmd_cols)
 
         # Vars for reading odom data from csv and finding error
         self.state_data = None
@@ -22,7 +24,7 @@ class DataCompare:
         self.pub_error = rospy.Publisher('error_pub', Float64, queue_size=10)
         self.odom_row = 0
         odom_cols = ["cmd_mode", "velocity left wheel", "measured travel left", "velocity right wheel", "measured travel right", "time"]
-        self.odom = pd.read_csv(f'{os.path.dirname(os.path.realpath(__file__))}/odometry/0001_odom_data.txt', header=None, names=odom_cols)
+        self.odom = pd.read_csv(f'{os.path.dirname(os.path.realpath(__file__))}/odometry/000{run}_odom_data.txt', header=None, names=odom_cols)
         self.start_mtl = self.odom["measured travel left"].iloc[0]
         self.start_mtr = self.odom["measured travel right"].iloc[0]
         self.start_vl = self.odom["velocity left wheel"].iloc[0]
@@ -46,15 +48,13 @@ class DataCompare:
             _, odom_vl, odom_mtl, odom_vr, odom_mtr, _ = self.odom.iloc[self.odom_row,:]
             self.odom_row += 1
 
-        lp = ((pos[0] + pos[2]) / 2)
-        rp = ((pos[1] + pos[3]) / 2)
-        lv = ((vel[0] + vel[2]) / 2)
-        rv = ((vel[1] + vel[3]) / 2)
+            lp = ((pos[0] + pos[2]) / 2)
+            rp = ((pos[1] + pos[3]) / 2)
+            lv = ((vel[0] + vel[2]) / 2)
+            rv = ((vel[1] + vel[3]) / 2)
 
-        print(lp, odom_mtl)
-
-        err = math.sqrt((((lp + self.start_mtl) - odom_mtl)**2 + ((rp + self.start_mtr) - odom_mtr)**2 + ((lv + self.start_vl) - odom_vl)**2 + ((rv + self.start_vr) - odom_vr)**2)/4)
-        self.pub_error.publish(Float64(err))
+            err = math.sqrt((((lp + self.start_mtl) - odom_mtl)**2 + ((rp + self.start_mtr) - odom_mtr)**2 + ((lv + self.start_vl) - odom_vl)**2 + ((rv + self.start_vr) - odom_vr)**2)/4)
+            self.pub_error.publish(Float64(err))
 
 
 if __name__ == '__main__':
