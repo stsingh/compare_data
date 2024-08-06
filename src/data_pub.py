@@ -23,6 +23,11 @@ class DataCompare:
         self.odom_row = 0
         odom_cols = ["cmd_mode", "velocity left wheel", "measured travel left", "velocity right wheel", "measured travel right", "time"]
         self.odom = pd.read_csv(f'{os.path.dirname(os.path.realpath(__file__))}/odometry/0001_odom_data.txt', header=None, names=odom_cols)
+        self.start_mtl = self.odom["measured travel left"].iloc[0]
+        self.start_mtr = self.odom["measured travel right"].iloc[0]
+        self.start_vl = self.odom["velocity left wheel"].iloc[0]
+        self.start_vr = self.odom["velocity right wheel"].iloc[0]
+
 
     def cmd_pub(self, event=None):
         if self.cmd_row < len(self.cmds):
@@ -46,7 +51,9 @@ class DataCompare:
         lv = ((vel[0] + vel[2]) / 2)
         rv = ((vel[1] + vel[3]) / 2)
 
-        err = math.sqrt(((lp - odom_mtl)**2 + (rp - odom_mtr)**2 + (lv - odom_vl)**2 + (rv - odom_vr)**2)/4)
+        print(lp, odom_mtl)
+
+        err = math.sqrt((((lp + self.start_mtl) - odom_mtl)**2 + ((rp + self.start_mtr) - odom_mtr)**2 + ((lv + self.start_vl) - odom_vl)**2 + ((rv + self.start_vr) - odom_vr)**2)/4)
         self.pub_error.publish(Float64(err))
 
 
