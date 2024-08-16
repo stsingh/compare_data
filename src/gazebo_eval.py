@@ -115,13 +115,28 @@ class DataCompare:
         # Log trajectories, joint states, and times
         ang_vel_time = np.arange(len(self.ang_vel_l)) / 20.0
         traj_time = np.arange(len(self.trajectory_x)) / 30.0
-        fig, (ax1, ax2) = plt.subplots(1, 2)
-        ax1.plot(ang_vel_time, self.ang_vel_l, label="Ang Vel Left Wheel")
-        ax1.plot(ang_vel_time, self.ang_vel_r, label="Ang Vel Right Wheel")
-        ax1.set_title("Angular Velocity Plots")
-        ax2.plot(traj_time, self.trajectory_x, label="X Trajectory")
-        ax2.plot(traj_time, self.trajectory_y, label="Y Trajectory")
-        ax2.set_title("Trajectory Plots")
+        fig, axs = plt.subplots(2, 2)
+        plt.setp(axs, xlim=(0, 60), ylim=(-10, 30))
+
+        axs[0][0].plot(ang_vel_time, self.ang_vel_l, label="Experimental")
+        axs[0][0].plot(ang_vel_time, np.array(self.odom["velocity left wheel"]) - self.start_vl, label="Expected")
+        axs[0][0].set_title("Angular Velocity Left Wheels")
+        axs[0][0].legend()
+
+        axs[0][1].plot(ang_vel_time, self.ang_vel_r, label="Experimental")
+        axs[0][1].plot(ang_vel_time, np.array(self.odom["velocity right wheel"]) - self.start_vr, label="Expected")
+        axs[0][1].set_title("Angular Velocity Right Wheels")
+        axs[0][1].legend()
+
+        axs[1][0].plot(traj_time, self.trajectory_x, label="Experimental")
+        axs[1][0].plot(traj_time, np.array(self.local_truth["x"]) - self.start_x, label="Expected")
+        axs[1][0].set_title("X Trajectory")
+        axs[1][0].legend()
+
+        axs[1][1].plot(traj_time, self.trajectory_y, label="Experimental")
+        axs[1][1].plot(traj_time, np.array(self.local_truth["y"]) - self.start_y, label="Expected")
+        axs[1][1].set_title("Y Trajectory")
+        axs[1][1].legend()
 
         filename = f"{self.curr_dir}/output/plots_run"
         i = 0
